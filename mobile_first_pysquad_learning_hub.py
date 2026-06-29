@@ -5,7 +5,7 @@ import base64
 from datetime import datetime
 import pandas as pd
 
-# Page Configuration for Mobile-First Display
+# মোবাইলের জন্য রেসপনসিভ পেজ কনফিগারেশন
 st.set_page_config(
     page_title="PySquad Hub",
     page_icon="🐍",
@@ -13,21 +13,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom Ultra-Modern Dark Theme CSS (Optimized for Mobile Screens)
+# মডার্ন ডার্ক থিম সিএসএস (মোবাইল ফ্রেন্ডলি ডিজাইন)
 st.markdown("""
 <style>
-    /* Hide Default Streamlit Elements for App-Like Feel */
+    /* স্ট্রিমলিটের ডিফল্ট হেডার-ফুটার হাইড করার জন্য */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Overall Background and Text Styling */
+    /* ব্যাকগ্রাউন্ড ও টেক্সট কালার */
     .stApp {
         background-color: #0d1117;
         color: #c9d1d9;
     }
     
-    /* Custom Responsive Video Container (Supports Fullscreen on Mobile) */
+    /* রেসপনসিভ ইউটিউব ভিডিও প্লেয়ার (মোবাইলে ফুলস্ক্রিন সাপোর্ট করবে) */
     .video-container {
         position: relative;
         padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
@@ -47,7 +47,7 @@ st.markdown("""
         border: 0;
     }
     
-    /* Modern Card Layout for Videos and Tasks */
+    /* কার্ড ডিজাইন */
     .card {
         background-color: #161b22;
         border: 1px solid #30363d;
@@ -57,7 +57,7 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
     
-    /* Sleek Title and Badge UI */
+    /* টাইটেল এবং ব্যাজ স্টাইল */
     .app-title {
         font-size: 2.2rem;
         font-weight: 800;
@@ -73,15 +73,14 @@ st.markdown("""
         margin-bottom: 25px;
     }
     .badge {
-        background-color: #238636;
-        color: white;
         padding: 4px 10px;
         border-radius: 12px;
         font-size: 0.8rem;
         font-weight: bold;
+        display: inline-block;
     }
     
-    /* Streamlit Button Customizations */
+    /* বাটনের মডার্ন স্টাইল */
     div.stButton > button {
         background-color: #21262d !important;
         color: #c9d1d9 !important;
@@ -100,7 +99,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ----------------- DATABASE UTILITIES -----------------
+# ----------------- ডাটাবেজ ইউটিলিটি -----------------
 DB_FILE = "learning_tracker.db"
 
 def get_db_connection():
@@ -111,7 +110,7 @@ def get_db_connection():
 def init_db():
     with get_db_connection() as conn:
         cursor = conn.cursor()
-        # Users Table
+        # ইউজার টেবিল
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 username TEXT PRIMARY KEY,
@@ -119,7 +118,7 @@ def init_db():
                 role TEXT NOT NULL
             )
         """)
-        # Videos / Tasks Table
+        # ভিডিও ও টাস্ক টেবিল
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS videos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,7 +128,7 @@ def init_db():
                 date_added TEXT NOT NULL
             )
         """)
-        # Video Views Tracker Table
+        # ভিডিও ভিউ ট্র্যাকিং টেবিল
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS views (
                 username TEXT,
@@ -138,19 +137,19 @@ def init_db():
                 PRIMARY KEY (username, video_id)
             )
         """)
-        # Task Submissions Table
+        # টাস্ক সাবমিশন টেবিল
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS submissions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT,
                 video_id INTEGER,
-                screenshot TEXT, -- Base64 encoded string
+                screenshot TEXT, -- Base64 ফরম্যাটে ছবি সেভ হবে
                 submitted_at TEXT,
                 FOREIGN KEY (video_id) REFERENCES videos(id)
             )
         """)
         
-        # Insert Admin User with password Touhidul#20 if not exists
+        # ডিফল্ট অ্যাডমিন অ্যাকাউন্ট তৈরি (Touhidul#20 পাসওয়ার্ড দিয়ে)
         admin_pass_hash = hashlib.sha256("Touhidul#20".encode()).hexdigest()
         cursor.execute("SELECT * FROM users WHERE username = 'admin'")
         if not cursor.fetchone():
@@ -158,10 +157,10 @@ def init_db():
                            ("admin", admin_pass_hash, "admin"))
         conn.commit()
 
-# Run database initialization
+# ডাটাবেজ চালু করা
 init_db()
 
-# Helper to process Video URLs for direct responsive embedding
+# ভিডিও লিংক প্রসেস করার ফাংশন (ইউটিউব এর জন্য এমবেড লিংক বের করবে)
 def get_embed_url(url):
     if "youtu.be/" in url:
         return "https://www.youtube.com/embed/" + url.split("youtu.be/")[1].split("?")[0]
@@ -172,14 +171,14 @@ def get_embed_url(url):
             return url
     return url
 
-# Helper to convert uploaded files to Base64
+# আপলোড করা ছবিকে Base64 টেক্সটে কনভার্ট করার ফাংশন
 def file_to_base64(uploaded_file):
     if uploaded_file is not None:
         file_bytes = uploaded_file.read()
         return base64.b64encode(file_bytes).decode("utf-8")
     return None
 
-# ----------------- SESSION STATE -----------------
+# ----------------- সেশন স্টেট (ইউজার লগইন ট্র্যাকিং) -----------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
     st.session_state.username = None
@@ -187,7 +186,7 @@ if "logged_in" not in st.session_state:
 if "current_tab" not in st.session_state:
     st.session_state.current_tab = "Home"
 
-# ----------------- USER LOGIN / REGISTER -----------------
+# ----------------- ইউজার লগইন ও রেজিস্টার সিস্টেম -----------------
 def login_user(username, password):
     hashed_pw = hashlib.sha256(password.encode()).hexdigest()
     with get_db_connection() as conn:
@@ -213,64 +212,64 @@ def register_user(username, password):
     except sqlite3.IntegrityError:
         return False
 
-# ----------------- APP RENDERING -----------------
+# ----------------- অ্যাপ রেন্ডারিং -----------------
 
 st.markdown("<h1 class='app-title'>🐍 PySquad Hub</h1>", unsafe_allow_html=True)
-st.markdown("<div class='app-subtitle'>Learn Python together with structured tracking</div>", unsafe_allow_html=True)
+st.markdown("<div class='app-subtitle'>সবাই মিলে একসাথে পাইথন শিখি ও প্রোগ্রেস ট্র্যাক করি</div>", unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
-    # Beautiful Custom Centered Form
+    # লগইন ও সাইনআপ ফর্ম
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    auth_mode = st.radio("Choose Action", ["Login", "Register"], horizontal=True)
+    auth_mode = st.radio("আপনার অ্যাকশন সিলেক্ট করুন", ["লগইন করুন", "নতুন অ্যাকাউন্ট খুলুন"], horizontal=True)
     
-    username_input = st.text_input("Username", placeholder="e.g., Touhidul")
-    password_input = st.text_input("Password", type="password", placeholder="Enter your password")
+    username_input = st.text_input("ইউজারনেম (Username)", placeholder="যেমন: Touhidul")
+    password_input = st.text_input("পাসওয়ার্ড (Password)", type="password", placeholder="পাসওয়ার্ড লিখুন")
     
-    if auth_mode == "Login":
-        if st.button("Unlock Dashboard 🚀"):
+    if auth_mode == "লগইন করুন":
+        if st.button("ড্যাশবোর্ডে প্রবেশ করুন 🚀"):
             if username_input and password_input:
                 if login_user(username_input, password_input):
-                    st.success(f"Welcome back, {st.session_state.username}!")
+                    st.success(f"স্বাগতম, {st.session_state.username}!")
                     st.rerun()
                 else:
-                    st.error("Invalid credentials. Try again.")
+                    st.error("ভুল ইউজারনেম অথবা পাসওয়ার্ড! আবার চেষ্টা করুন।")
             else:
-                st.warning("Please fill out all fields.")
+                st.warning("দয়া করে সবগুলো ঘর পূরণ করুন।")
     else:
-        if st.button("Create Account ✨"):
+        if st.button("রেজিস্ট্রেশন সম্পন্ন করুন ✨"):
             if username_input and password_input:
                 if len(password_input) < 4:
-                    st.error("Password must be at least 4 characters long.")
+                    st.error("পাসওয়ার্ড অন্তত ৪ অক্ষরের হতে হবে।")
                 elif register_user(username_input, password_input):
-                    st.success("Account created successfully! Please login.")
+                    st.success("অ্যাকাউন্ট তৈরি সফল হয়েছে! এখন লগইন করুন।")
                 else:
-                    st.error("Username already taken.")
+                    st.error("এই ইউজারনেমটি ইতিমধ্যে ব্যবহৃত হয়েছে। অন্য নাম দিন।")
             else:
-                st.warning("Please fill out all fields.")
+                st.warning("দয়া করে সবগুলো ঘর পূরণ করুন।")
     st.markdown("</div>", unsafe_allow_html=True)
 
 else:
-    # Native Mobile Navigation Bar
+    # মোবাইলের জন্য সহজে ব্যবহারযোগ্য নেভিগেশন বার
     st.markdown("---")
     nav_cols = st.columns(4 if st.session_state.role == "admin" else 3)
     
     with nav_cols[0]:
-        if st.button("🎬 Videos"): st.session_state.current_tab = "Home"
+        if st.button("🎬 ভিডিওসমূহ"): st.session_state.current_tab = "Home"
     with nav_cols[1]:
-        if st.button("📊 Tracker"): st.session_state.current_tab = "Tracker"
+        if st.button("📊 ট্র্যাকার"): st.session_state.current_tab = "Tracker"
     with nav_cols[2]:
-        if st.button("🔓 Logout"):
+        if st.button("🔓 লগআউট"):
             st.session_state.logged_in = False
             st.session_state.username = None
             st.session_state.role = None
             st.rerun()
     if st.session_state.role == "admin":
         with nav_cols[3]:
-            if st.button("⚙️ Admin"): st.session_state.current_tab = "Admin"
+            if st.button("⚙️ অ্যাডমিন"): st.session_state.current_tab = "Admin"
 
-    # ----------------- PAGE 1: VIDEO HUB (HOME) -----------------
+    # ----------------- পেজ ১: ভিডিও পোর্টাল (HOME) -----------------
     if st.session_state.current_tab == "Home":
-        st.subheader("Your Video Assignments")
+        st.subheader("আপনার আজকের ক্লাসের ভিডিও")
         
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -278,14 +277,14 @@ else:
             all_videos = cursor.fetchall()
             
         if not all_videos:
-            st.info("No videos uploaded yet. Ask your group leader to post some!")
+            st.info("এখনো কোনো ভিডিও আপলোড করা হয়নি। গ্রুপ লিডারকে ভিডিও দেওয়ার জন্য বলুন!")
         else:
             for idx, vid in enumerate(all_videos):
                 vid_id = vid["id"]
                 st.markdown(f"<div class='card'>", unsafe_allow_html=True)
-                st.markdown(f"<h3>Video #{idx+1}: {vid['title']}</h3>", unsafe_allow_html=True)
+                st.markdown(f"<h3>ভিডিও #{idx+1}: {vid['title']}</h3>", unsafe_allow_html=True)
                 
-                # Check if already marked as watched
+                # ভিডিও দেখা হয়েছে কিনা চেক করা
                 with get_db_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM views WHERE username = ? AND video_id = ?", 
@@ -293,13 +292,13 @@ else:
                     watched = cursor.fetchone() is not None
                 
                 if watched:
-                    st.markdown("<span class='badge' style='background-color:#1f6feb;'>Watched ✅</span>", unsafe_allow_html=True)
+                    st.markdown("<span class='badge' style='background-color:#1f6feb;'>দেখেছি ✅</span>", unsafe_allow_html=True)
                 else:
-                    st.markdown("<span class='badge' style='background-color:#da3633;'>Not Watched ❌</span>", unsafe_allow_html=True)
+                    st.markdown("<span class='badge' style='background-color:#da3633;'>দেখা হয়নি ❌</span>", unsafe_allow_html=True)
                 
                 st.write("")
                 
-                # Embed Video inside responsive wrapper with fullscreen enabled
+                # রেসপনসিভ ইউটিউব ভিডিও প্লেয়ার
                 embed_link = get_embed_url(vid["url"])
                 st.markdown(f"""
                     <div class="video-container">
@@ -307,63 +306,63 @@ else:
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Expandable Task Details
-                with st.expander("📝 View Practice Task Details", expanded=True):
-                    st.markdown(f"**Task Description:** \n{vid['task_desc']}")
+                # প্র্যাকটিস টাস্কের বিবরণ
+                with st.expander("📝 প্র্যাকটিস টাস্কের বিস্তারিত দেখুন", expanded=True):
+                    st.markdown(f"**আজকের কাজ:** \n{vid['task_desc']}")
                 
-                # Actions (Watch Logging & Screenshot Submission)
+                # অ্যাকশন বাটনসমূহ
                 col1, col2 = st.columns(2)
                 with col1:
                     if not watched:
-                        if st.button("Mark as Watched 👀", key=f"watch_btn_{vid_id}"):
+                        if st.button("দেখা শেষ করলাম 👀", key=f"watch_btn_{vid_id}"):
                             with get_db_connection() as conn:
                                 cursor = conn.cursor()
                                 cursor.execute("INSERT OR IGNORE INTO views (username, video_id, viewed_at) VALUES (?, ?, ?)",
                                                (st.session_state.username, vid_id, datetime.now().strftime("%Y-%m-%d %H:%M")))
                                 conn.commit()
-                            st.success("Logged as watched!")
+                            st.success("ভিডিও দেখা সফলভাবে সেভ হয়েছে!")
                             st.rerun()
                 with col2:
-                    # Submit task button/expander
-                    with st.expander("📤 Submit Screenshot"):
-                        up_file = st.file_uploader("Practice Screenshot", type=["png", "jpg", "jpeg"], key=f"up_{vid_id}")
-                        comment = st.text_input("Add any comments/notes", key=f"comm_{vid_id}", placeholder="I completed this!")
-                        if st.button("Submit Task 🚀", key=f"sub_btn_{vid_id}"):
+                    # স্ক্রিনশট আপলোড সেকশন
+                    with st.expander("📤 স্ক্রিনশট জমা দিন"):
+                        up_file = st.file_uploader("আপনার প্র্যাকটিসের স্ক্রিনশট সিলেক্ট করুন", type=["png", "jpg", "jpeg"], key=f"up_{vid_id}")
+                        comment = st.text_input("কোনো মন্তব্য থাকলে লিখুন", key=f"comm_{vid_id}", placeholder="ভাইয়া, আমার কোড ঠিকমতো কাজ করেছে!")
+                        if st.button("টাস্ক সাবমিট করুন 🚀", key=f"sub_btn_{vid_id}"):
                             if up_file:
                                 b64_img = file_to_base64(up_file)
                                 with get_db_connection() as conn:
                                     cursor = conn.cursor()
                                     cursor.execute("INSERT INTO submissions (username, video_id, screenshot, submitted_at) VALUES (?, ?, ?, ?)",
                                                    (st.session_state.username, vid_id, b64_img, datetime.now().strftime("%Y-%m-%d %H:%M")))
-                                    # Also auto-mark as watched
+                                    # সাবমিট করলে অটোমেটিক্যালি ভিডিও দেখা কমপ্লিট হয়ে যাবে
                                     cursor.execute("INSERT OR IGNORE INTO views (username, video_id, viewed_at) VALUES (?, ?, ?)",
                                                    (st.session_state.username, vid_id, datetime.now().strftime("%Y-%m-%d %H:%M")))
                                     conn.commit()
-                                st.success("Task uploaded and submitted!")
+                                st.success("আপনার টাস্কের স্ক্রিনশট সফলভাবে জমা হয়েছে!")
                                 st.rerun()
                             else:
-                                st.error("Please select a screenshot file.")
+                                st.error("দয়া করে একটি ইমেজ বা স্ক্রিনশট সিলেক্ট করুন।")
                 
                 st.markdown("</div>", unsafe_allow_html=True)
 
-    # ----------------- PAGE 2: PROGRESS TRACKER -----------------
+    # ----------------- পেজ ২: প্রোগ্রেস ট্র্যাকার (TRACKER) -----------------
     elif st.session_state.current_tab == "Tracker":
-        st.subheader("Group Analytics & Submissions")
+        st.subheader("গ্রুপের বন্ধুদের কাজের ট্র্যাকিং")
         
         with get_db_connection() as conn:
-            # Load users (excluding admin)
+            # অ্যাডমিন বাদে অন্য সব ইউজার
             df_users = pd.read_sql_query("SELECT username FROM users WHERE role != 'admin'", conn)
-            # Load total videos
+            # সর্বমোট ভিডিওর সংখ্যা
             df_vids = pd.read_sql_query("SELECT id, title FROM videos", conn)
-            # Load submissions
+            # সাবমিশন ডাটা
             df_subs = pd.read_sql_query("SELECT username, video_id FROM submissions", conn)
             
         if df_users.empty:
-            st.info("No regular users registered yet.")
+            st.info("এখনো কোনো মেম্বার রেজিস্ট্রেশন করেনি।")
         elif df_vids.empty:
-            st.info("No videos registered to track.")
+            st.info("ট্র্যাক করার জন্য এখনো কোনো ভিডিও আপলোড করা হয়নি।")
         else:
-            st.write("### 📉 Missing Task Tracker List")
+            st.write("### 📉 কার কার কোন টাস্ক বাদ আছে?")
             for _, u in df_users.iterrows():
                 user = u["username"]
                 completed_ids = set(df_subs[df_subs["username"] == user]["video_id"].tolist())
@@ -371,19 +370,19 @@ else:
                 missing_ids = all_ids - completed_ids
                 
                 st.markdown(f"<div class='card' style='padding: 15px;'>", unsafe_allow_html=True)
-                st.markdown(f"**👤 User:** `{user}`")
+                st.markdown(f"**👤 মেম্বার:** `{user}`")
                 if not missing_ids:
-                    st.markdown("<span class='badge' style='background-color:#238636;'>All Tasks Submitted! 🔥</span>", unsafe_allow_html=True)
+                    st.markdown("<span class='badge' style='background-color:#238636;'>সবগুলো টাস্ক সম্পন্ন করেছে! 🔥</span>", unsafe_allow_html=True)
                 else:
                     missing_labels = []
                     for m_id in missing_ids:
                         idx = df_vids[df_vids["id"] == m_id].index[0] + 1
-                        missing_labels.append(f"Video {idx}")
-                    st.markdown(f"🔴 **Missing Tasks:** {', '.join(missing_labels)}")
+                        missing_labels.append(f"ভিডিও {idx}")
+                    st.markdown(f"🔴 **বাকি আছে:** {', '.join(missing_labels)}")
                 st.markdown("</div>", unsafe_allow_html=True)
             
-            # Global feed of code submissions
-            st.write("### 📸 Live Practice Screenshot Feed")
+            # বন্ধুদের জমা দেওয়া কাজের লাইভ ফিড
+            st.write("### 📸 সবার জমা দেওয়া প্র্যাকটিস স্ক্রিনশটসমূহ")
             with get_db_connection() as conn:
                 cursor = conn.cursor()
                 cursor.execute("""
@@ -395,57 +394,57 @@ else:
                 all_subs = cursor.fetchall()
                 
             if not all_subs:
-                st.info("No screenshots submitted by anyone yet.")
+                st.info("এখনো কেউ স্ক্রিনশট জমা দেয়নি।")
             else:
                 for sub in all_subs:
                     st.markdown("<div class='card'>", unsafe_allow_html=True)
-                    st.markdown(f"**{sub['username']}** submitted **Practice Screenshot** for Video: `{sub['title']}`")
-                    st.caption(f"Submitted on: {sub['submitted_at']}")
+                    st.markdown(f"👤 **{sub['username']}** স্ক্রিনশট জমা দিয়েছে - **ভিডিও: `{sub['title']}`**-এর জন্য")
+                    st.caption(f"জমা দেওয়ার সময়: {sub['submitted_at']}")
                     
-                    # Decode base64 and display image safely
+                    # Base64 থেকে ছবি ডিকোড করে দেখানো
                     img_data = sub["screenshot"]
                     try:
                         st.image(base64.b64decode(img_data), use_column_width=True)
                     except Exception:
-                        st.error("Error displaying screenshot.")
+                        st.error("ছবিটি লোড করতে সমস্যা হচ্ছে।")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-    # ----------------- PAGE 3: ADMIN PANEL -----------------
+    # ----------------- পেজ ৩: অ্যাডমিন প্যানেল (ADMIN) -----------------
     elif st.session_state.current_tab == "Admin" and st.session_state.role == "admin":
-        st.subheader("Admin Control Panel")
+        st.subheader("গ্রুপ লিডার কন্ট্রোল প্যানেল (অ্যাডমিন)")
         
-        # Section A: Upload Video
+        # সেকশন ১: নতুন ভিডিও আপলোড
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.write("### 🎬 Upload New Video Assignment")
-        v_title = st.text_input("Video Title", placeholder="e.g., Python Lists and Tuples")
-        v_url = st.text_input("Video URL (YouTube/Drive Link)", placeholder="e.g., https://www.youtube.com/watch?v=...")
-        v_task = st.text_area("Task Description for Students", placeholder="Type what they need to practice...")
+        st.write("### 🎬 নতুন ভিডিও ও টাস্ক আপলোড করুন")
+        v_title = st.text_input("ভিডিওর শিরোনাম (যেমন: Python List Tutorial)", placeholder="শিরোনাম লিখুন...")
+        v_url = st.text_input("ইউটিউব/ড্রাইভ ভিডিও লিংক", placeholder="যেমন: https://www.youtube.com/watch?v=...")
+        v_task = st.text_area("আজকের প্র্যাকটিস কাজের বিবরণ", placeholder="বন্ধুদের কী কী কোড প্র্যাকটিস করতে হবে তা এখানে লিখুন...")
         
-        if st.button("Publish Assignment 📣"):
+        if st.button("ভিডিও এবং টাস্ক পাবলিশ করুন 📣"):
             if v_title and v_url:
                 with get_db_connection() as conn:
                     cursor = conn.cursor()
                     cursor.execute("INSERT INTO videos (title, url, task_desc, date_added) VALUES (?, ?, ?, ?)",
                                    (v_title, v_url, v_task, datetime.now().strftime("%Y-%m-%d")))
                     conn.commit()
-                st.success(f"Successfully published: {v_title}")
+                st.success(f"সফলভাবে পাবলিশ করা হয়েছে: {v_title}")
                 st.rerun()
             else:
-                st.error("Title and URL are required!")
+                st.error("ভিডিওর শিরোনাম এবং লিংক অবশ্যই দিতে হবে!")
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # Section B: Viewers Tracking
+        # সেকশন ২: ভিডিও অনুযায়ী কে কে দেখেছে তার তালিকা
         st.markdown("<div class='card'>", unsafe_allow_html=True)
-        st.write("### 👁️ View & Watch Logs per Video")
+        st.write("### 👁️ কোন ভিডিও কে কে দেখেছে দেখুন")
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, title FROM videos")
             vids_list = cursor.fetchall()
             
         if vids_list:
-            selected_vid = st.selectbox("Select Video to Check Viewers", 
+            selected_vid = st.selectbox("ভিডিও সিলেক্ট করুন", 
                                         options=[v["id"] for v in vids_list], 
-                                        format_func=lambda x: f"Video {x} - " + [v["title"] for v in vids_list if v["id"] == x][0])
+                                        format_func=lambda x: f"ভিডিও {x} - " + [v["title"] for v in vids_list if v["id"] == x][0])
             
             with get_db_connection() as conn:
                 cursor = conn.cursor()
@@ -456,53 +455,11 @@ else:
                 viewers = cursor.fetchall()
                 
             if viewers:
-                st.success(f"Total Viewers: {len(viewers)}")
+                st.success(f"মোট ভিউয়ার্স সংখ্যা: {len(viewers)} জন")
                 for vw in viewers:
-                    st.write(f"- 👤 **{vw['username']}** (Watched at: {vw['viewed_at']})")
+                    st.write(f"- 👤 **{vw['username']}** (দেখেছে: {vw['viewed_at']})")
             else:
-                st.warning("No one has logged watching this video yet.")
+                st.warning("এখনো কেউ এই ভিডিওটি দেখেছে হিসেবে মার্ক করেনি।")
         else:
-            st.info("No videos uploaded to track views.")
+            st.info("ভিউয়ার্স ট্র্যাক করার জন্য আগে ভিডিও আপলোড করুন।")
         st.markdown("</div>", unsafe_allow_html=True)
-```
-eof
-
-### 📋 পাইথন প্রজেক্টটি ফ্রিতে হোস্ট ও রিকোয়েস্ট করার মাস্টার প্রম্পট (Prompt)
-
-ভবিষ্যতে যদি এই প্রজেক্টে আরও কোনো নতুন ফিচার যুক্ত করতে চান বা কোড পরিবর্তন করতে চান, তাহলে নিচের প্রম্পটটি সরাসরি যেকোনো এআই চ্যাটে ব্যবহার করতে পারবেন:
-
-```text
-You are an expert full-stack developer. Optimize the existing single-file Streamlit web app (`app.py`) for a dedicated mobile-first learning platform called "PySquad Hub". The user base consists of students learning Python who access the portal primarily from their smartphones.
-
-### Core Architecture & Technical Requirements:
-1. **Framework:** Python 3 + Streamlit. Keep all components, backend logic, Custom CSS, and routing in a single file (`app.py`).
-2. **Database System:** Use SQLite (`learning_tracker.db`) to keep the hosting completely free on Streamlit Community Cloud (no expensive external API/databases needed).
-3. **Admin Controls:** Hardcode default credentials to: Username: `admin`, Password Hash of: `Touhidul#20`.
-
-### Visual & Mobile UI Design Constraints:
-1. **App-Like Styling:** Inject custom CSS to hide the standard Streamlit top banner, side menu, and standard footer. Use a dark background `#0d1117` and card borders `#30363d` for a modern, sleek developer feel.
-2. **Responsive Mobile Video Player:** Wrap video widgets in a CSS iframe container that auto-scales dynamically (16:9 ratio) and supports full-screen toggle seamlessly on iOS/Android browsers.
-3. **Custom Navigation:** Create custom action buttons at the top of the interface that behave like app tabs (Videos, Analytics/Leaderboard, Admin) so users don't have to open the sidebar.
-
-### Feature Flow:
-- **Videos:** Display list of lessons. Enable a "Mark as Watched" log that maps user action to the database.
-- **Task Submission:** Enable files (PNG, JPG, JPEG) to be uploaded as practice screenshots under each video assignment. Convert files instantly to Base64 to save them safely as a text column inside SQLite.
-- **Progress Tracker:** Display a clear "Missing Task List" for each student (e.g., "User Rahim is missing Video 3 Task, Video 4 Task").
-- **Admin Panel:** Grant exclusive access to the 'admin' role. The admin must be able to:
-  1. Post new Videos with Title, URL, and Task Descriptions.
-  2. Select any video from a dropdown and see a list of usernames who watched it.
-  3. Review all screenshot submissions with details of which student uploaded them for which video assignment.
-```
-
-### 🛠️ কিভাবে সাইটটি ফ্রিতে রান ও লাইভ করবেন:
-
-১. **কম্পিউটারে রান করতে:**
-   - আপনার কম্পিউটারে টার্মিনাল খুলে টাইপ করুন: `pip install streamlit pandas`
-   - এরপর ফাইলটি যে ফোল্ডারে আছে সেখানে গিয়ে রান করুন: `streamlit run app.py`
-
-২. **১০০% ফ্রিতে লাইভ হোস্ট করতে:**
-   - কোডটি আপনার **GitHub** অ্যাকাউন্টে একটি রিপোজিটরি বানিয়ে পুশ (Upload) করুন।
-   - **[Streamlit Community Cloud](https://share.streamlit.io/)**-এ গিয়ে ফ্রি অ্যাকাউন্ট তৈরি করুন এবং আপনার গিটহাবের সাথে কানেক্ট করুন।
-   - আপনার রিপোজিটরি সিলেক্ট করে "Deploy" বাটনে ক্লিক করুন। 
-
-আপনার বন্ধুদের লার্নিং গ্রুপকে দারুণভাবে পরিচালনা করার জন্য ওয়েবসাইটটি এখন পুরোপুরি প্রস্তুত! কোনো নতুন ফিচার যোগ করতে চাইলে বা কোনো জায়গায় বুঝতে সমস্যা হলে আমাকে জানাবেন।
